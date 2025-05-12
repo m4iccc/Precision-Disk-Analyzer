@@ -2,7 +2,6 @@
 
 A simple web application built with Python/Flask and vanilla JavaScript to analyze disk space usage on your local machine. It provides a user-friendly interface to navigate directories and identify which subfolders and files are consuming the most space.
 
-![Screenshot Placeholder](https://via.placeholder.com/600x400.png?text=App+Screenshot+Here)
 *<!-- TODO: Replace the placeholder URL above with an actual screenshot of your running application! -->*
 
 ## ✨ Features
