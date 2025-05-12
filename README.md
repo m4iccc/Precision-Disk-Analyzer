@@ -50,32 +50,18 @@ Python Libraries: os, pathlib
 
 🚀 Setup and Running Locally
 
-Clone the repository:
+# 1. Clone the repository:
 
 git clone https://github.com/your-username/disk-analyzer.git
 cd disk-analyzer
 
-
-Install dependencies: (Only Flask is required for the basic backend)
+# 2. Install dependencies: (Only Flask is required for the basic backend)
 
 pip install Flask
-# Or if you have a requirements.txt: pip install -r requirements.txt
-IGNORE_WHEN_COPYING_START
-content_copy
-download
-Use code with caution.
-Bash
-IGNORE_WHEN_COPYING_END
 
-Run the Flask backend:
+# 3. Run the Flask backend:
 
 python app.py
-IGNORE_WHEN_COPYING_START
-content_copy
-download
-Use code with caution.
-Bash
-IGNORE_WHEN_COPYING_END
 
 The backend server will start, typically on http://127.0.0.1:5000.
 
