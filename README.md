@@ -88,4 +88,8 @@ A simple web application built with Python/Flask and vanilla JavaScript to analy
 
 ## 📄 License
 
-[Optional: Add your chosen license here, e.g., This project is licensed under the MIT License - see the LICENSE file for details]
+This project is licensed under the terms of the **GNU General Public License v3.0**.
+
+You should have received a copy of the GNU General Public License along with this program. If not, see <https://www.gnu.org/licenses/>.
+
+The full license text is also included in the `LICENSE` file in the root of this repository.
