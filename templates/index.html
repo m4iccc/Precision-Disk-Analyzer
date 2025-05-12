@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Disk Space Analyzer</title>
+    <!-- CSS Files -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <!-- Custom Styles (Copied from style.css for simplicity if needed) -->
+    <style>
+        body { padding-top: 1rem; } /* Add some padding at the top */
+        #resultsTable th, #resultsTable td { vertical-align: middle; }
+        .error-message, .alert-danger { display: none; } /* Hide error divs initially */
+        .alert-info { display: none; } /* Hide info divs initially */
+        .loading-indicator { display: none; margin-top: 15px; }
+        .clickable-path { cursor: pointer; color: #0d6efd; text-decoration: none; }
+        .clickable-path:hover { text-decoration: underline; color: #0a58ca; }
+        .icon { margin-right: 5px; font-size: 1.1em; display: inline-block; width: 1.2em; text-align: center; }
+        .folder-icon::before { content: '📁'; }
+        .file-icon::before { content: '📄'; }
+        .symlink-icon::before { content: '🔗'; }
+        .error-icon::before { content: '⚠️'; }
+        #logDisplay { max-height: 200px; overflow-y: auto; background-color: #f8f9fa; border: 1px solid #dee2e6; padding: 10px; font-family: monospace; font-size: 0.9em; margin-top: 15px; white-space: pre-wrap; display: none; }
+        #logDisplayHeader { font-weight: bold; margin-bottom: 5px; display: none; }
+        .session-management { background-color: #f8f9fa; border: 1px solid #dee2e6; }
+        #currentSessionDisplay { font-style: italic; margin-top: 5px; font-size: 0.9em; color: #6c757d; }
+        .cache-hit-indicator { font-size: 0.8em; color: green; margin-left: 10px; font-style: italic; }
+        .btn i { vertical-align: text-bottom; }
+        .load-session-group { margin-top: 10px; }
+        #results { margin-top: 1.5rem; }
+        #summary { font-weight: bold; color: #495057; }
+        .table-responsive { overflow-x: auto; }
+    </style>
+</head>
+<body>
+    <div class="container mt-4">
+        <header class="pb-3 mb-4 border-bottom">
+             <h1 class="h3"><i class="bi bi-hdd-stack me-2"></i>Disk Space Analyzer</h1>
+        </header>
+
+        <!-- Session Management Section -->
+        <div class="session-management card card-body mb-4 shadow-sm">
+            <h5 class="card-title">Analysis Session</h5>
+            <p class="card-text small text-muted">Cache analysis results in your browser. Start a new session or load a previous one.</p>
+            <!-- Start/Use New Session -->
+            <div class="input-group mb-2">
+                <span class="input-group-text"><i class="bi bi-plus-circle me-1"></i> New/Use:</span>
+                <input type="text" id="sessionNameInput" class="form-control" placeholder="Session Name (e.g., MyDocsScan)">
+                <button id="useSessionButton" class="btn btn-success">Use / Start</button>
+                <button id="clearSessionButton" class="btn btn-danger" title="Clear currently active session cache" disabled><i class="bi bi-eraser me-1"></i>Clear Active</button>
+            </div>
+             <div id="currentSessionDisplay">No active session. Analyses will not be cached.</div>
+
+            <!-- Load Previous Session -->
+            <div class="load-session-group input-group mt-3">
+                 <span class="input-group-text"><i class="bi bi-folder2-open me-1"></i> Load:</span>
+                 <select id="sessionSelector" class="form-select" aria-label="Select saved session">
+                     <option selected disabled value="">Select a saved session...</option>
+                     <!-- Options populated by JS -->
+                 </select>
+                 <button id="loadSelectedSessionButton" class="btn btn-primary" disabled>Load</button>
+                 <button id="deleteSelectedSessionButton" class="btn btn-outline-danger" title="Delete selected session from list" disabled><i class="bi bi-trash"></i></button>
+            </div>
+        </div>
+
+        <!-- Path Input & Actions -->
+        <div class="card card-body shadow-sm">
+            <div class="mb-3">
+                 <label for="pathInput" class="form-label">Directory Path to Analyze:</label>
+                 <input type="text" id="pathInput" class="form-control" placeholder="e.g., /home/user/Downloads or C:\Users\YourUser\Documents" value="{{ default_path }}">
+            </div>
+            <div class="d-flex justify-content-between align-items-center">
+                 <div id="currentPathDisplay" class="text-muted fst-italic small">
+                      <!-- Current path display -->
+                 </div>
+                 <div>
+                    <button id="upButton" class="btn btn-secondary btn-sm me-1" title="Go Up One Level" disabled><i class="bi bi-arrow-up"></i> Up</button>
+                    <button id="refreshButton" class="btn btn-info btn-sm me-1" title="Refresh Analysis (ignore cache)" disabled>
+                        <i class="bi bi-arrow-clockwise"></i> Refresh
+                    </button>
+                    <button id="analyzeButton" class="btn btn-primary btn-sm"><i class="bi bi-search me-1"></i> Analyze</button>
+                 </div>
+            </div>
+        </div>
+
+
+        <!-- Loading Indicator -->
+        <div id="loadingIndicator" class="loading-indicator alert alert-warning mt-3">
+             <div class="d-flex align-items-center">
+                 <div class="spinner-border spinner-border-sm me-2" role="status"> <span class="visually-hidden">Loading...</span> </div>
+                 <span id="loadingStatusText">Analyzing...</span>
+             </div>
+             <div class="progress mt-2" role="progressbar" aria-valuenow="100" style="height: 4px;"> <div class="progress-bar progress-bar-striped progress-bar-animated bg-info" style="width: 100%"></div> </div>
+        </div>
+
+        <!-- Error Display Area -->
+        <div id="errorDisplay" class="error-message mt-3 alert alert-danger"></div>
+        <!-- Info Display Area (for non-errors like session loaded) -->
+        <div id="infoDisplay" class="alert alert-info mt-3" style="display: none;"></div>
+
+
+        <!-- Results Area -->
+        <div id="results" class="mt-4" style="display: none;"> <!-- Initially hidden -->
+             <p id="summary" class="mb-2"></p>
+            <div class="table-responsive">
+                <table id="resultsTable" class="table table-striped table-hover table-sm">
+                    <thead class="table-light">
+                        <tr>
+                            <th scope="col" style="width: 3em;">Type</th>
+                            <th scope="col">Name</th>
+                            <th scope="col" style="width: 8em;">Size</th>
+                            <th scope="col">Path</th>
+                            <th scope="col" style="width: 10em;">Status</th>
+                        </tr>
+                    </thead>
+                    <!-- IMPORTANT: The ID must be exactly 'resultsBody' -->
+                    <tbody id="resultsBody">
+                        <!-- Results populated by JS -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Log Display Area -->
+        <div id="logDisplayContainer" class="mt-3 mb-5"> <!-- Add margin bottom -->
+             <div id="logDisplayHeader">Analysis Logs:</div>
+             <pre id="logDisplay"></pre>
+        </div>
+
+    </div> <!-- End container -->
+
+    <!-- JavaScript Files -->
+    <script src="{{ url_for('static', filename='script.js') }}"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

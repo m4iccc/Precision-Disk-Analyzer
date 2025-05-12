@@ -1,0 +1,36 @@
+/* static/style.css */
+
+/* Add any specific custom styles here if needed. */
+/* Most styling is currently handled by Bootstrap v5.3+ */
+/* and inline styles within the script.js for dynamic elements */
+/* or within the <style> tag in index.html */
+
+/* Example of a custom style you might add: */
+/*
+body {
+    background-color: #f0f2f5;
+}
+
+.card {
+    border: none;
+}
+*/
+
+/* You could move styles from the <style> tag in index.html here */
+/* For example: */
+/*
+.cache-hit-indicator {
+    font-size: 0.8em;
+    color: green;
+    margin-left: 10px;
+    font-style: italic;
+}
+
+.icon {
+    margin-right: 5px;
+    font-size: 1.1em;
+    display: inline-block;
+    width: 1.2em;
+    text-align: center;
+}
+*/
